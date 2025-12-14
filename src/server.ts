@@ -1,13 +1,15 @@
 import express, { Request, Response } from "express";
 import { LinkController } from "./controllers/LinkController";
-
+import cors from "cors";
 const app = express();
 const linkController = new LinkController();
+
 app.use(express.json());
+app.use(cors());
 
 app.post("/encurtar", linkController.encurtar);
 app.get("/links", linkController.listar);
-app.get("/:code/stats", linkController.verEstatisticas)
+app.get("/:code/stats", linkController.verEstatisticas);
 app.get("/:code", linkController.redirecionar);
 
 app.listen(3000, () => {
