@@ -7,7 +7,9 @@ app.use(express.json());
 
 app.post("/encurtar", linkController.encurtar);
 app.get("/links", linkController.listar);
+app.get("/:code/stats", linkController.verEstatisticas)
 app.get("/:code", linkController.redirecionar);
+
 app.listen(3000, () => {
   console.log("🔥 Servidor rodando em http://localhost:3000");
 });

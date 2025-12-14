@@ -9,7 +9,7 @@ export class LinkController {
     const { urlOriginal } = req.body;
     if (urlOriginal) {
       const id: string = Math.random().toString(36).substring(2, 7);
-      const link: Link = { id, urlOriginal };
+      const link: Link = { id, urlOriginal, cliques: 0 };
       bancoDeDados.salvar(link);
       res.status(201).send({ message: "Link encurtado com sucesso!", link });
     } else {
@@ -23,6 +23,7 @@ export class LinkController {
     if (!link) {
       res.status(404).send({ message: "Link não encontrado." });
     } else {
+      link.cliques++;
       res.redirect(link.urlOriginal);
     }
   }
@@ -33,6 +34,16 @@ export class LinkController {
       res.status(200).send({ message: links });
     } else {
       res.status(200).send({ message: "Não tem links registrados ainda." });
+    }
+  }
+
+  verEstatisticas(req: Request, res: Response) {
+    const { code } = req.params;
+    const link = bancoDeDados.buscarPorId(code);
+    if (!link) {
+      res.status(404).send({ message: "Link não encontrado." });
+    } else {
+      res.status(200).send({ message: link });
     }
   }
 }
