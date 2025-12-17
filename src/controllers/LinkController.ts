@@ -1,49 +1,81 @@
 import { Request, Response } from "express";
 import { Link } from "../models/Link";
-import { BancoDeDados } from "../database/BancoDeDados";
+import { prisma } from "../lib/prisma";
 
-const bancoDeDados = new BancoDeDados<Link>();
 
 export class LinkController {
-  encurtar(req: Request, res: Response) {
+  async encurtar(req: Request, res: Response) {
     const { urlOriginal } = req.body;
-    if (urlOriginal) {
-      const id: string = Math.random().toString(36).substring(2, 7);
-      const link: Link = { id, urlOriginal, cliques: 0 };
-      bancoDeDados.salvar(link);
-      res.status(201).send({ message: "Link encurtado com sucesso!", link });
-    } else {
-      res.status(400).send({ message: "Erro: campo urlOriginal obrigatoria." });
+
+    if (!urlOriginal) {
+      return res
+        .status(400)
+        .send({ message: "Erro: campo urlOriginal obrigatoria." });
+    }
+
+    try {
+      const link = await prisma.link.create({
+        data: {
+          id: Math.random().toString(36).substring(2, 7),
+          urlOriginal,
+          cliques: 0,
+        },
+      });
+      return res
+        .status(201)
+        .send({ message: "Link encurtado com sucesso!", link });
+    } catch (error) {
+      return res
+        .status(500)
+        .send({ message: "Erro ao encurtar o link.", error });
     }
   }
 
-  redirecionar(req: Request, res: Response) {
+  async redirecionar(req: Request, res: Response) {
     const { code } = req.params;
-    const link = bancoDeDados.buscarPorId(code);
-    if (!link) {
-      res.status(404).send({ message: "Link não encontrado." });
-    } else {
-      link.cliques++;
-      res.redirect(link.urlOriginal);
+    try {
+      const link = await prisma.link.findUnique({
+        where: { id: code },
+      });
+
+      if (!link) {
+        return res.status(404).send({ message: "Link não encontrado." });
+      }
+      await prisma.link.update({
+        where: { id: code },
+        data: { cliques: { increment: 1 } },
+      });
+      return res.redirect(link.urlOriginal);
+    } catch (error) {
+      return res
+        .status(500)
+        .send({ message: "Erro ao redirecionar o link.", error });
     }
   }
 
-  listar(req: Request, res: Response) {
-    const links = bancoDeDados.listar();
-    if (links.length > 0) {
+  async listar(req: Request, res: Response) {
+    try {
+      const links = await prisma.link.findMany();
       res.status(200).send({ message: links });
-    } else {
-      res.status(200).send({ message: "Não tem links registrados ainda." });
+    } catch (error) {
+      return res.status(500).send({ message: "Erro ao buscar links." });
     }
   }
 
-  verEstatisticas(req: Request, res: Response) {
+  async verEstatisticas(req: Request, res: Response) {
     const { code } = req.params;
-    const link = bancoDeDados.buscarPorId(code);
-    if (!link) {
-      res.status(404).send({ message: "Link não encontrado." });
-    } else {
-      res.status(200).send({ message: link });
+    try {
+      const link = await prisma.link.findUnique({
+        where: { id: code },
+      });
+
+      if (!link) {
+        return res.status(404).send({ message: "Link não encontrado." });
+      }
+
+      return res.status(200).send({ message: link });
+    } catch (error) {
+      return res.status(500).send({ message: "Erro ao buscar estatísticas." });
     }
   }
 }
