@@ -1,34 +1,36 @@
 # ✂️ TS Encurtador API
 
-> Uma API REST robusta para encurtamento de URLs e Analytics, desenvolvida com Node.js, Express e TypeScript.
+> API REST robusta para encurtamento de URLs com persistência de dados real, desenvolvida com Node.js, Express, TypeScript e Prisma.
 
 ![Badge TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
 ![Badge Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)
-![Badge Express](https://img.shields.io/badge/Express.js-404D59?style=for-the-badge)
+![Badge Prisma](https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white)
+![Badge SQLite](https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)
 
 ## 💻 Sobre o Projeto
 
-Este projeto é o resultado final de um **Desafio Intensivo de TypeScript**. O objetivo foi migrar do JavaScript padrão para uma arquitetura robusta e tipada, aplicando conceitos de Engenharia de Software.
+Este projeto é a evolução de um desafio de TypeScript. Inicialmente construído com armazenamento em memória, ele foi **migrado para uma arquitetura escalável** utilizando Banco de Dados Relacional.
 
-A aplicação segue o padrão **MVC (Model-View-Controller)**, utiliza **Generics** para persistência em memória e já está configurada com **CORS** para integração com Front-end.
+A aplicação agora garante a **persistência dos dados** (os links não somem ao reiniciar o servidor), utiliza **Prisma ORM** para comunicação segura com o banco e segue o padrão **MVC**.
 
 ### ✨ Funcionalidades
 
-- [x] **Encurtar URL:** Recebe uma URL longa e gera um ID único de 5 caracteres.
-- [x] **Redirecionamento:** Acessar o código curto redireciona o usuário para o site original.
-- [x] **Analytics:** Contagem automática de cliques por link.
-- [x] **Listagem:** Visualização de todos os links cadastrados no sistema.
-- [x] **Validação:** Garante que dados inválidos não sejam processados.
+- [x] **Encurtar URL:** Recebe uma URL longa e gera um hash único.
+- [x] **Persistência Real:** Dados salvos em banco SQLite.
+- [x] **Redirecionamento:** Acessar o código curto redireciona para o site original.
+- [x] **Analytics:** Contador de cliques atômico e seguro.
+- [x] **Integração:** Pronto para conectar com Front-end (CORS habilitado).
 
 ---
 
 ## 🛠️ Tecnologias Utilizadas
 
 - **Linguagem:** TypeScript (Strict Mode)
+- **Runtime:** Node.js
 - **Framework:** Express.js
-- **Segurança:** CORS (Cross-Origin Resource Sharing)
+- **ORM (Object-Relational Mapping):** Prisma
+- **Banco de Dados:** SQLite (Arquivo local `dev.db`)
 - **Tooling:** ts-node-dev (Hot Reload)
-- **Arquitetura:** Repository Pattern (Genérico) & MVC.
 
 ---
 
@@ -48,9 +50,13 @@ $ cd ts-express-encurtador-url
 # 3. Instale as dependências
 $ npm install
 
-# 4. Inicie o servidor
+# 4. Crie o Banco de Dados (Migração do Prisma)
+$ npx prisma migrate dev --name init
+
+# 5. Inicie o servidor
 $ npm run dev
 ```
+
 Servidor disponível em: http://localhost:3000
 
 # 🔌 Documentação da API
@@ -78,7 +84,8 @@ Cria um novo link encurtado e inicializa o contador de cliques.
   "link": {
     "id": "abc12",
     "urlOriginal": "https://www.google.com",
-    "cliques": 0
+    "cliques": 0,
+    "criadoEm": "2025-12-17T12:00:00.000Z"
   }
 }
 ```
@@ -111,7 +118,8 @@ http://localhost:3000/abc12/stats
 {
   "id": "abc12",
   "urlOriginal": "https://www.google.com",
-  "cliques": 42
+  "cliques": 42,
+  "criadoEm" "..."
 }
 ```
 
@@ -127,20 +135,28 @@ Retorna todos os links salvos na memória.
     {
       "id": "3528q",
       "urlOriginal": "https://expressjs.com/en/guide/routing.html",
-      "cliques": 12
+      "cliques": 12,
+      "criadoEm" "...",
     },
     {
       "id": "irwrt",
       "urlOriginal": "https://expressjs.com/",
-      "cliques": 1
+      "cliques": 1,
+      "criadoEm" "..."
     }
   ]
 }
 ```
 
 ## 🧠 Aprendizados do Projeto
+
 Durante o desenvolvimento, foram aplicados os seguintes conceitos de TypeScript:
+
 - Tipagem Estática: Uso de Request, Response e interfaces de dados.
 - Generics: Criação da classe BancoDeDados<T>, reutilizável para qualquer entidade.
 - Modificadores de Acesso: Uso de private e public nas classes.
 - Integração Fullstack: Configuração de CORS para permitir consumo via React.
+- De Array para SQL: Substituição de links.push() por INSERT INTO.
+- ORM vs Query Crua: Uso do Prisma para evitar SQL Injection e ganhar produtividade.
+- Async/Await: Tratamento correto de Promises, já que o banco de dados não responde instantaneamente.
+- Migrations: Versionamento da estrutura do banco de dados via código
