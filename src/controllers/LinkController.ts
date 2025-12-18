@@ -1,19 +1,16 @@
 import { Request, Response } from "express";
 import { Link } from "../models/Link";
 import { prisma } from "../lib/prisma";
-
+import z from "zod";
 
 export class LinkController {
   async encurtar(req: Request, res: Response) {
-    const { urlOriginal } = req.body;
-
-    if (!urlOriginal) {
-      return res
-        .status(400)
-        .send({ message: "Erro: campo urlOriginal obrigatoria." });
-    }
+    const createLinkSchema = z.object({
+      urlOriginal: z.string().url(),
+    });
 
     try {
+      const { urlOriginal } = createLinkSchema.parse(req.body);
       const link = await prisma.link.create({
         data: {
           id: Math.random().toString(36).substring(2, 7),
@@ -25,6 +22,12 @@ export class LinkController {
         .status(201)
         .send({ message: "Link encurtado com sucesso!", link });
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).send({
+          message: "Dados inválidos.",
+          issues: error.format(),
+        });
+      }
       return res
         .status(500)
         .send({ message: "Erro ao encurtar o link.", error });
